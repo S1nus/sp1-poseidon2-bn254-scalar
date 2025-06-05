@@ -1,0 +1,6 @@
+[package]
+name = "sp1-bn254-poseidon"
+version = "0.1.0"
+edition = "2024"
+
+[dependencies]
