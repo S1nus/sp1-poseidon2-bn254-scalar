@@ -1,6 +1,8 @@
 // Let's use this as a reference 
 // https://github.com/HorizenLabs/poseidon2/tree/main/plain_implementations
-use crypto_bigint::{U256, Wrapping, Add, Sub, Mul};
+use crypto_bigint::{U256, Wrapping};
+use crypto_bigint::impl_modulus;
+use std::ops::{Add, Sub, Mul};
 
 // bn254 scalar field modulus is:
 // 21888242871839275222246405745257275088548364400416034343698204186575808495617
@@ -9,36 +11,4 @@ use crypto_bigint::{U256, Wrapping, Add, Sub, Mul};
 
 const MODULUS: U256 = U256::from_le_hex("30644E72E131A029B85045B68181585D2833E84879B9709143E1F593F0000001");
 
-pub struct Fq {
-    value: U256,
-}
-
-impl Fq {
-    pub fn new(value: U256) -> Self {
-        Self { value }
-    }
-}
-
-impl Add for Fq {
-    type Output = Self;
-
-    fn add(self, other: Self) -> Self::Output {
-        Self { value: self.value.add_mod(other.value, MODULUS) }
-    }
-}
-
-impl Sub for Fq {
-    type Output = Self;
-
-    fn sub(self, other: Self) -> Self::Output {
-        Self { value: self.value.sub_mod(other.value, MODULUS) }
-    }
-}
-
-impl Mul for Fq {
-    type Output = Self;
-
-    fn mul(self, other: Self) -> Self::Output {
-        Self { value: self.value.mul_mod(other.value, MODULUS) }
-    }
-}
+impl_modulus!(Fq, U256, "30644E72E131A029B85045B68181585D2833E84879B9709143E1F593F0000001");
