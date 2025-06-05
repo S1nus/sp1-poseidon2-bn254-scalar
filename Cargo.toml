@@ -7,3 +7,6 @@ edition = "2024"
 lazy_static = "1.4"
 hex = "0.4"
 crypto-bigint = { git = "https://github.com/sp1-patches/RustCrypto-bigint", tag = "patch-0.5.5-sp1-4.0.0" }
+ark-ff = { version = "^0.4.0", default-features = false }
+ark-std = { version = "^0.4.0", default-features = false }
+random = {package = "rand", version = "0.8"}
