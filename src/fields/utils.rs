@@ -1,10 +1,10 @@
 use crate::fields::bn256::FpBN256;
-
-use crypto_bigint::{Random, U256, Zero};
+use crypto_bigint::U256;
 
 /// Converts a hex string into FpBN256
 /// Interpret as a big-endian number, reducing as needed
-/// TODO: vet this is actually correct!
+/// FIXME: vet this is actually correct!
+/// TODO: Can this be made a const fn? Avoid lazy_static for performance
 pub fn from_hex(s: &str) -> FpBN256 {
     let s = s.strip_prefix("0x").unwrap_or(s);
     let bytes = hex::decode(s).expect("invalid hex");
@@ -20,14 +20,22 @@ pub fn from_hex(s: &str) -> FpBN256 {
     res
 }
 
-pub fn random_scalar<FpBN246>() -> FpBN256 {
-    let mut rng = rand::thread_rng();
+#[cfg(feature = "std")]
+use crypto_bigint::Random;
+#[cfg(feature = "std")]
+use rand::thread_rng;
+
+#[cfg(feature = "std")]
+pub fn random_scalar() -> FpBN256 {
+    let mut rng = thread_rng();
     FpBN256::random(&mut rng)
 }
 
-pub fn random_scalar_without_0<FpBN246>() -> FpBN256 {
+#[cfg(feature = "std")]
+pub fn random_scalar_without_0() -> FpBN256 {
+    use crypto_bigint::Zero;
     loop {
-        let element = random_scalar::<FpBN256>();
+        let element = random_scalar();
         if (!element.is_zero()).into() {
             return element;
         }
