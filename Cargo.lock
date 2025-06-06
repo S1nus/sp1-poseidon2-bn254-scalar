@@ -104,7 +104,7 @@ dependencies = [
 ]
 
 [[package]]
-name = "sp1-bn254-poseidon2"
+name = "sp1-poseidon2-bn256"
 version = "0.1.0"
 dependencies = [
  "crypto-bigint",
