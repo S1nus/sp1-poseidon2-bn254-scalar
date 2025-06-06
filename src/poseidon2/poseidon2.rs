@@ -1,15 +1,16 @@
 use super::poseidon2_params::Poseidon2Params;
-use crate::merkle_tree::merkle_tree_fp::MerkleTreeHash;
-use ark_ff::PrimeField;
+use crate::fields::bn256::FpBN256;
+use crate::{fields::bn256::ModMathInPlace, merkle_tree::merkle_tree_fp::MerkleTreeHash};
+use core::ops::{AddAssign, MulAssign};
 use std::sync::Arc;
 
 #[derive(Clone, Debug)]
-pub struct Poseidon2<F: PrimeField> {
-    pub(crate) params: Arc<Poseidon2Params<F>>,
+pub struct Poseidon2 {
+    pub(crate) params: Arc<Poseidon2Params>,
 }
 
-impl<F: PrimeField> Poseidon2<F> {
-    pub fn new(params: &Arc<Poseidon2Params<F>>) -> Self {
+impl Poseidon2 {
+    pub fn new(params: &Arc<Poseidon2Params>) -> Self {
         Poseidon2 {
             params: Arc::clone(params),
         }
@@ -19,7 +20,7 @@ impl<F: PrimeField> Poseidon2<F> {
         self.params.t
     }
 
-    pub fn permutation(&self, input: &[F]) -> Vec<F> {
+    pub fn permutation(&self, input: &[FpBN256]) -> Vec<FpBN256> {
         let t = self.params.t;
         assert_eq!(input.len(), t);
 
@@ -49,11 +50,11 @@ impl<F: PrimeField> Poseidon2<F> {
         current_state
     }
 
-    fn sbox(&self, input: &[F]) -> Vec<F> {
+    fn sbox(&self, input: &[FpBN256]) -> Vec<FpBN256> {
         input.iter().map(|el| self.sbox_p(el)).collect()
     }
 
-    fn sbox_p(&self, input: &F) -> F {
+    fn sbox_p(&self, input: &FpBN256) -> FpBN256 {
         let mut input2 = *input;
         input2.square_in_place();
 
@@ -82,7 +83,7 @@ impl<F: PrimeField> Poseidon2<F> {
         }
     }
 
-    fn matmul_m4(&self, input: &mut [F]) {
+    fn matmul_m4(&self, input: &mut [FpBN256]) {
         let t = self.params.t;
         let t4 = t / 4;
         for i in 0..t4 {
@@ -116,7 +117,7 @@ impl<F: PrimeField> Poseidon2<F> {
         }
     }
 
-    fn matmul_external(&self, input: &mut [F]) {
+    fn matmul_external(&self, input: &mut [FpBN256]) {
         let t = self.params.t;
         match t {
             2 => {
@@ -145,7 +146,7 @@ impl<F: PrimeField> Poseidon2<F> {
 
                 // Applying second cheap matrix for t > 4
                 let t4 = t / 4;
-                let mut stored = [F::zero(); 4];
+                let mut stored = [FpBN256::ZERO; 4];
                 for l in 0..4 {
                     stored[l] = input[l];
                     for j in 1..t4 {
@@ -162,7 +163,7 @@ impl<F: PrimeField> Poseidon2<F> {
         }
     }
 
-    fn matmul_internal(&self, input: &mut [F], mat_internal_diag_m_1: &[F]) {
+    fn matmul_internal(&self, input: &mut [FpBN256], mat_internal_diag_m_1: &[FpBN256]) {
         let t = self.params.t;
 
         match t {
@@ -207,7 +208,7 @@ impl<F: PrimeField> Poseidon2<F> {
         }
     }
 
-    fn add_rc(&self, input: &[F], rc: &[F]) -> Vec<F> {
+    fn add_rc(&self, input: &[FpBN256], rc: &[FpBN256]) -> Vec<FpBN256> {
         input
             .iter()
             .zip(rc.iter())
@@ -220,9 +221,9 @@ impl<F: PrimeField> Poseidon2<F> {
     }
 }
 
-impl<F: PrimeField> MerkleTreeHash<F> for Poseidon2<F> {
-    fn compress(&self, input: &[&F]) -> F {
-        self.permutation(&[input[0].to_owned(), input[1].to_owned(), F::zero()])[0]
+impl MerkleTreeHash for Poseidon2 {
+    fn compress(&self, input: &[&FpBN256]) -> FpBN256 {
+        self.permutation(&[input[0].to_owned(), input[1].to_owned(), FpBN256::ZERO])[0]
     }
 }
 
@@ -245,11 +246,11 @@ mod poseidon2_tests_bn256 {
         let poseidon2 = Poseidon2::new(&POSEIDON2_BN256_PARAMS);
         let t = poseidon2.params.t;
         for _ in 0..TESTRUNS {
-            let input1: Vec<Scalar> = (0..t).map(|_| random_scalar()).collect();
+            let input1: Vec<Scalar> = (0..t).map(|_| random_scalar::<FpBN256>()).collect();
 
             let mut input2: Vec<Scalar>;
             loop {
-                input2 = (0..t).map(|_| random_scalar()).collect();
+                input2 = (0..t).map(|_| random_scalar::<FpBN256>()).collect();
                 if input1 != input2 {
                     break;
                 }
@@ -268,7 +269,7 @@ mod poseidon2_tests_bn256 {
         let poseidon2 = Poseidon2::new(&POSEIDON2_BN256_PARAMS);
         let mut input: Vec<Scalar> = vec![];
         for i in 0..poseidon2.params.t {
-            input.push(Scalar::from(i as u64));
+            input.push(Scalar::new(&crypto_bigint::U256::from(i as u64)));
         }
         let perm = poseidon2.permutation(&input);
         assert_eq!(

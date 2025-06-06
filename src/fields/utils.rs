@@ -1,21 +1,34 @@
-use ark_ff::PrimeField;
+use crate::fields::bn256::FpBN256;
 
-use hex::FromHex;
+use crypto_bigint::{Random, U256, Zero};
 
-pub fn from_hex<F: PrimeField>(s: &str) -> F {
-    let a = Vec::from_hex(&s[2..]).expect("Invalid Hex String");
-    F::from_be_bytes_mod_order(&a as &[u8])
+/// Converts a hex string into FpBN256
+/// Interpret as a big-endian number, reducing as needed
+/// TODO: vet this is actually correct!
+pub fn from_hex(s: &str) -> FpBN256 {
+    let s = s.strip_prefix("0x").unwrap_or(s);
+    let bytes = hex::decode(s).expect("invalid hex");
+
+    let mut res = FpBN256::new(&U256::ZERO);
+    let radix = FpBN256::new(&U256::from_u64(256));
+
+    for &byte in bytes.iter() {
+        res *= &radix;
+        res += FpBN256::new(&U256::from_u64(byte as u64));
+    }
+
+    res
 }
 
-pub fn random_scalar<F: PrimeField>() -> F {
-    let mut rng = ark_std::rand::thread_rng();
-    F::rand(&mut rng)
+pub fn random_scalar<FpBN246>() -> FpBN256 {
+    let mut rng = rand::thread_rng();
+    FpBN256::random(&mut rng)
 }
 
-pub fn random_scalar_without_0<F: PrimeField>() -> F {
+pub fn random_scalar_without_0<FpBN246>() -> FpBN256 {
     loop {
-        let element = random_scalar::<F>();
-        if !element.is_zero() {
+        let element = random_scalar::<FpBN256>();
+        if (!element.is_zero()).into() {
             return element;
         }
     }

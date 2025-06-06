@@ -1,17 +1,17 @@
-use ark_ff::PrimeField;
+use crate::fields::bn256::FpBN256;
 use std::marker::PhantomData;
 
-pub trait MerkleTreeHash<F: PrimeField> {
-    fn compress(&self, input: &[&F]) -> F;
+pub trait MerkleTreeHash {
+    fn compress(&self, input: &[&FpBN256]) -> FpBN256;
 }
 
 #[derive(Clone, Debug)]
-pub struct MerkleTree<F: PrimeField, P: MerkleTreeHash<F>> {
+pub struct MerkleTree<P: MerkleTreeHash> {
     perm: P,
-    field: PhantomData<F>,
+    field: PhantomData<FpBN256>,
 }
 
-impl<F: PrimeField, P: MerkleTreeHash<F>> MerkleTree<F, P> {
+impl<P: MerkleTreeHash> MerkleTree<P> {
     pub fn new(perm: P) -> Self {
         MerkleTree {
             perm,
@@ -32,7 +32,7 @@ impl<F: PrimeField, P: MerkleTreeHash<F>> MerkleTree<F, P> {
         res
     }
 
-    pub fn accumulate(&mut self, set: &[F]) -> F {
+    pub fn accumulate(&mut self, set: &[FpBN256]) -> FpBN256 {
         let set_size = set.len();
         let mut bound = Self::round_up_pow_n(set_size, 2);
         loop {
@@ -41,7 +41,7 @@ impl<F: PrimeField, P: MerkleTreeHash<F>> MerkleTree<F, P> {
             }
             bound *= 2;
         }
-        let mut nodes: Vec<F> = Vec::with_capacity(bound);
+        let mut nodes: Vec<FpBN256> = Vec::with_capacity(bound);
         for s in set {
             nodes.push(s.to_owned());
         }
@@ -52,7 +52,7 @@ impl<F: PrimeField, P: MerkleTreeHash<F>> MerkleTree<F, P> {
 
         while nodes.len() > 1 {
             let new_len = nodes.len() / 2;
-            let mut new_nodes: Vec<F> = Vec::with_capacity(new_len);
+            let mut new_nodes: Vec<FpBN256> = Vec::with_capacity(new_len);
             for i in (0..nodes.len()).step_by(2) {
                 let inp = [&nodes[i], &nodes[i + 1]];
                 let dig = self.perm.compress(&inp);
