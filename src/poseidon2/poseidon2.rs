@@ -227,15 +227,13 @@ impl MerkleTreeHash for Poseidon2 {
     }
 }
 
-#[allow(unused_imports)]
 #[cfg(test)]
 mod poseidon2_tests_bn256 {
     use super::*;
     use crate::{
-        fields::{bn256::FpBN256, utils::from_hex, utils::random_scalar},
+        fields::{bn256::FpBN256, utils::from_hex},
         poseidon2::poseidon2_instance_bn256::POSEIDON2_BN256_PARAMS,
     };
-    use std::convert::TryFrom;
 
     type Scalar = FpBN256;
 
@@ -243,14 +241,28 @@ mod poseidon2_tests_bn256 {
 
     #[test]
     fn consistent_perm() {
+        #[cfg(feature = "std")]
+        use crate::fields::utils::random_scalar;
+
+        // fallback fixed scalar for no_std builds
+        #[cfg(not(feature = "std"))]
+        fn random_scalar() -> Scalar {
+            use crypto_bigint::U256;
+            use core::sync::atomic::{AtomicU64, Ordering};
+            
+            static COUNTER: AtomicU64 = AtomicU64::new(420);
+            let seed = COUNTER.fetch_add(69, Ordering::Relaxed);
+            Scalar::new(&U256::from_u64(seed))
+        }
+
         let poseidon2 = Poseidon2::new(&POSEIDON2_BN256_PARAMS);
         let t = poseidon2.params.t;
         for _ in 0..TESTRUNS {
-            let input1: Vec<Scalar> = (0..t).map(|_| random_scalar::<FpBN256>()).collect();
+            let input1: Vec<Scalar> = (0..t).map(|_| random_scalar()).collect();
 
             let mut input2: Vec<Scalar>;
             loop {
-                input2 = (0..t).map(|_| random_scalar::<FpBN256>()).collect();
+                input2 = (0..t).map(|_| random_scalar()).collect();
                 if input1 != input2 {
                     break;
                 }
