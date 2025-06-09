@@ -240,12 +240,12 @@ mod poseidon2_tests_bn256 {
 
     type Scalar = FpBN256;
 
-    static TESTRUNS: usize = 5;
-
     #[test]
     fn consistent_perm() {
         #[cfg(feature = "std")]
         use crate::fields::utils::random_scalar;
+        #[cfg(feature = "std")]
+        static TESTRUNS: usize = 50;
 
         // fallback fixed scalar for no_std builds
         #[cfg(not(feature = "std"))]
@@ -256,6 +256,8 @@ mod poseidon2_tests_bn256 {
             let seed = COUNTER.fetch_add(69, Ordering::Relaxed);
             Scalar::new(&U256Field::from_u64(seed))
         }
+        #[cfg(not(feature = "std"))]
+        static TESTRUNS: usize = 1;
 
         let poseidon2 = Poseidon2::new(&POSEIDON2_BN256_PARAMS);
         let t = poseidon2.params.t;
