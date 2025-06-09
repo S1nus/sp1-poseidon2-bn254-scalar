@@ -11,7 +11,7 @@ checksum = "baf1de4339761588bc0619e3cbc0120ee582ebb74b53b4efbf79117bd2da40fd"
 [[package]]
 name = "crypto-bigint"
 version = "0.5.5"
-source = "git+https://github.com/sp1-patches/RustCrypto-bigint?tag=patch-0.5.5-sp1-4.0.0#d421029772fb604022defd4cae5fffb269ad5155"
+source = "git+https://github.com/nuke-web3/RustCrypto-bigint?branch=patch-v0.5.5#eebd8488ffdc3e3e0b1f6ac75cc9c6ce23c3fc79"
 dependencies = [
  "rand_core",
  "subtle",
@@ -104,8 +104,8 @@ dependencies = [
 ]
 
 [[package]]
-name = "sp1-bn254-poseidon2"
-version = "0.1.0"
+name = "sp1-poseidon2-bn256"
+version = "0.2.0"
 dependencies = [
  "crypto-bigint",
  "hex",
