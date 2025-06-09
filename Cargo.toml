@@ -7,12 +7,14 @@ edition = "2024"
 [dependencies]
 lazy_static = "1.4"
 hex = "0.4"
-crypto-bigint = "=0.5.5"
+crypto-bigint = { version = "=0.5.5", default-features = false }
 rand = { version = "0.8", optional = true }
 
 [patch.crates-io]
-crypto-bigint = { git = "https://github.com/sp1-patches/RustCrypto-bigint", tag = "patch-0.5.5-sp1-4.0.0" }
+# crypto-bigint = { git = "https://github.com/sp1-patches/RustCrypto-bigint", tag = "patch-0.5.5-sp1-4.0.0" }
+# crypto-bigint = { path = "../../sp1-bigint-patch" }
+crypto-bigint = { git = "https://github.com/nuke-web3/RustCrypto-bigint", branch = "patch-v0.5.5" }
 
 [features]
 default = []
-std = ["rand"]
+std = ["rand", "crypto-bigint/rand"]
